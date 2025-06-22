@@ -1,0 +1,46 @@
+import java.time.*;
+import java.time.format.*;
+import java.util.*;
+import java.time.temporal.TemporalAccessor;
+
+public class Main {
+
+    public static void main(String[] args) {
+        String input1 = "01/23/2025 CET";
+        String input2 = "01/23/2025 13:22 CET";
+        String input3 = "01/23/2025 13:22";
+
+        System.out.println("Parsed: " + parseToDate(input1, "MM/dd/yyyy z"));
+        System.out.println("Parsed: " + parseToDate(input2, "MM/dd/yyyy HH:mm z"));
+        System.out.println("Parsed: " + parseToDate(input3, "MM/dd/yyyy HH:mm"));
+    }
+
+   public static Date parseToDate(String input, String format) {
+    try {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format, Locale.ENGLISH);
+
+        ZonedDateTime zdt;
+
+        if (format.contains("z") && !format.contains("H")) {
+            // Handle date + zone only (no time)
+            DateTimeFormatter dateZoneFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy z", Locale.ENGLISH);
+            TemporalAccessor parsed = dateZoneFormatter.parse(input);
+            LocalDate date = LocalDate.from(parsed);
+            ZoneId zone = ZoneId.from(parsed);
+            zdt = date.atStartOfDay(zone);
+        } else if (format.contains("z")) {
+  
+            zdt = ZonedDateTime.parse(input, formatter);
+        } else {
+        
+            LocalDateTime ldt = LocalDateTime.parse(input, formatter);
+            zdt = ldt.atZone(ZoneId.systemDefault());
+        }
+
+        return Date.from(zdt.toInstant());
+    } catch (DateTimeParseException e) {
+        System.out.println("Invalid date format: " + e.getMessage());
+        return null;
+    }
+    }
+}
